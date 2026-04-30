@@ -1,0 +1,45 @@
+services:
+  # ====== Postgres Database ======
+  db:
+    image: postgres:16-alpine
+    container_name: items-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: itemsdb
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ====== FastAPI Backend ======
+  backend:
+    build: ./backend
+    container_name: items-backend
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/itemsdb
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # ====== React Frontend ======
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:8000
+    container_name: items-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  db_data:
