@@ -1,0 +1,11 @@
+{$SITE_ADDRESS:":80"} {
+	# /api/* → strip the /api prefix → forward to FastAPI
+	handle_path /api/* {
+		reverse_proxy backend:8000
+	}
+
+	# everything else → React static site (nginx)
+	handle {
+		reverse_proxy frontend:80
+	}
+}
