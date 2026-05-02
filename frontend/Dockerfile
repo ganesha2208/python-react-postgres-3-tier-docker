@@ -13,7 +13,8 @@ RUN npm ci
 COPY . .
 
 # Build time pe API ka URL chahiye (Vite isko bundle me daal deta hai)
-ARG VITE_API_URL=http://localhost:8000
+# Default "/api" matches the Caddy reverse-proxy route (Caddy strips /api → backend:8000)
+ARG VITE_API_URL=/api
 ENV VITE_API_URL=$VITE_API_URL
 
 # React app ko production build karo (output dist/ folder me)
