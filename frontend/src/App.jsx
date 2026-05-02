@@ -79,6 +79,7 @@ export default function App() {
   return (
     <div className="container">
       <h1>📦 Items Manager — CI/CD Test ✅</h1>
+      <h1>Hello Ganesha congrats you complate this project</h1>
       {error && <div className="error">{error}</div>}
 
       <form onSubmit={onSubmit}>
