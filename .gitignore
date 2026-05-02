@@ -13,3 +13,9 @@ build/
 # IDE
 .vscode/
 .idea/
+
+# SSH / private keys (never commit)
+gh-deploy-key*
+*.pem
+id_rsa*
+id_ed25519*

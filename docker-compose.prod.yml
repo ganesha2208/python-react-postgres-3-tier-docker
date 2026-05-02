@@ -1,7 +1,9 @@
 services:
+  # ====== Postgres Database ======
   db:
     image: postgres:16-alpine
     container_name: items-db
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
@@ -14,24 +16,48 @@ services:
       timeout: 5s
       retries: 5
 
+  # ====== FastAPI Backend (internal only) ======
   backend:
-    image: ${ECR_REGISTRY}/items-backend:${TAG:-v1}
+    image: ${ECR_REGISTRY}/items-backend:${TAG:-latest}
     container_name: items-backend
+    restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-itemsdb}
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     depends_on:
       db:
         condition: service_healthy
 
+  # ====== React Frontend (internal only) ======
   frontend:
-    image: ${ECR_REGISTRY}/items-frontend:${TAG:-v1}
+    image: ${ECR_REGISTRY}/items-frontend:${TAG:-latest}
     container_name: items-frontend
+    restart: unless-stopped
+    expose:
+      - "80"
+    depends_on:
+      - backend
+
+  # ====== Caddy reverse proxy (only public service) ======
+  caddy:
+    image: caddy:2-alpine
+    container_name: items-caddy
+    restart: unless-stopped
     ports:
       - "80:80"
+      - "443:443"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
     depends_on:
+      - frontend
       - backend
 
 volumes:
   db_data:
+  caddy_data:
+  caddy_config:
